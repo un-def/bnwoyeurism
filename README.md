@@ -16,13 +16,15 @@ Desktop notifications for new BnW posts/comments.
 
 ### Usage
 
-```bnwoyeurism.py [-p|-c|-a] [@|user1 user2 user3 …]```
+```bnwoyeurism.py [-p|-c|-a] [-w default|meow|6nw] [@|user1 user2 user3 …]```
 
-```-p``` — show only posts
+```-p```, ```--posts``` — show only posts
 
-```-c``` — show only comments
+```-c```, ```--comments``` — show only comments
 
-```-a``` — show both posts and comments (default)
+```-a```, ```--all``` — show both posts and comments (default)
+
+```-w```, ```--web``` — web interface for posts/comments links
 
 ```@``` — show notifications from all users
 
