@@ -6,6 +6,7 @@ import sys
 import time
 import threading
 from datetime import datetime
+import argparse
 import json
 import urllib2
 import cgi
@@ -15,14 +16,21 @@ import gobject
 import pynotify
 import websocket
 
-post_link = 'https://bnw.im/p/{}'
-show_comments = True
-show_posts = True
-modes = {
-    '-c': (True, False),
-    '-p': (False, True),
-    '-a': (True, True)
+
+web_interfaces = {
+    'default': 'https://bnw.im/p/{}',
+    'meow': 'https://meow.bnw.im/p/{}',
+    '6nw': 'https://6nw.im/p/{}',
 }
+
+
+parser = argparse.ArgumentParser(description="bnwoyeurism — desktop notifications for new BnW posts/comments")
+parser.add_argument('-p', '--posts', action='store_true', help="show only posts")
+parser.add_argument('-c', '--comments', action='store_true', help="show only comments")
+parser.add_argument('-a', '--all', action='store_true', help="show both posts and comments")
+parser.add_argument('-w', '--web', choices=web_interfaces.keys(), default='default', help="web interface")
+parser.add_argument('users', nargs='*', metavar='user', help="space separated list of users or '@'")
+args = parser.parse_args()
 
 
 class BnWebSocketException(Exception):
@@ -77,7 +85,7 @@ class BnWebSocket(websocket.WebSocketApp):
 
     def show_cb(self, n, action, message_id):
         n.close()
-        webbrowser.open(post_link.format(message_id.replace('/', '#')))
+        webbrowser.open(web_link.format(message_id.replace('/', '#')))
 
     def close_cb(self, n):
         self.notifications.remove(n)
@@ -123,15 +131,13 @@ else:
     for f in os.listdir(avatars_dir):
         os.remove(os.path.join(avatars_dir, f))
 
-args = sys.argv[1:]
-if args:
-    if args[0].startswith('-'):
-        try:
-            show_comments, show_posts = modes[args.pop(0)]
-        except KeyError:
-            pass
-if args:
-    users = 'all' if args[0] == '@' else args
+if not any((args.posts, args.comments, args.all)):
+    args.all = True
+
+web_link = web_interfaces[args.web]
+
+if args.users:
+    users = 'all' if '@' in args.users else args.users
 else:
     users_file = os.path.join(app_dir, 'users')
     if os.path.isfile(users_file):
@@ -148,8 +154,8 @@ else:
 
 notifications = []
 gobject.threads_init()
-if show_posts:
+if args.all or args.posts:
     threading.Thread(target=ws_thread, args=('wss://bnw.im/ws', 'post', notifications)).start()
-if show_comments:
+if args.all or args.comments:
     threading.Thread(target=ws_thread, args=('wss://bnw.im/comments/ws', 'comment', notifications)).start()
 gtk.main()
