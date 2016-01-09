@@ -151,6 +151,7 @@ else:
             users = 'all'
     else:
         users = 'all'
+print("user(s):", "*all*" if users == 'all' else " ".join(users))
 
 notifications = []
 gobject.threads_init()
